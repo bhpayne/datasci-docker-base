@@ -24,6 +24,7 @@ RUN apt-get update && \
     fonts-dejavu \
     tzdata \
     graphviz \
+    libmagic \
     gfortran \
     gcc && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
