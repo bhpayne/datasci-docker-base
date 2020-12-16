@@ -1,4 +1,3 @@
-# https://github.com/jupyter/docker-stacks/tree/master/datascience-notebook
 
 # docker build -t datasci .
 
@@ -8,160 +7,96 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+# https://github.com/jupyter/docker-stacks/tree/master/datascience-notebook
 # https://jupyter-docker-stacks.readthedocs.io/en/latest/using/selecting.html#core-stacks
 # https://raw.githubusercontent.com/jupyter/docker-stacks/master/datascience-notebook/Dockerfile
 
-ARG BASE_CONTAINER=jupyter/scipy-notebook
+ARG BASE_CONTAINER=jupyter/datascience-notebook
 FROM $BASE_CONTAINER
 
-LABEL maintainer="Jupyter Project <jupyter@googlegroups.com>"
-
-USER root
-
-# R pre-requisites
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    fonts-dejavu \
-    tzdata \
-    graphviz \
-    libmagic-dev \
-    gfortran \
-    gcc && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Julia dependencies
-# install Julia packages in /opt/julia instead of $HOME
-ENV JULIA_DEPOT_PATH=/opt/julia
-ENV JULIA_PKGDIR=/opt/julia
-ENV JULIA_VERSION=1.0.0
-
-RUN mkdir /opt/julia-${JULIA_VERSION} && \
-    cd /tmp && \
-    wget -q https://julialang-s3.julialang.org/bin/linux/x64/`echo ${JULIA_VERSION} | cut -d. -f 1,2`/julia-${JULIA_VERSION}-linux-x86_64.tar.gz && \
-    echo "bea4570d7358016d8ed29d2c15787dbefaea3e746c570763e7ad6040f17831f3 *julia-${JULIA_VERSION}-linux-x86_64.tar.gz" | sha256sum -c - && \
-    tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
-    rm /tmp/julia-${JULIA_VERSION}-linux-x86_64.tar.gz
-RUN ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
-
-# Show Julia where conda libraries are \
-RUN mkdir /etc/julia && \
-    echo "push!(Libdl.DL_LOAD_PATH, \"$CONDA_DIR/lib\")" >> /etc/julia/juliarc.jl && \
-    # Create JULIA_PKGDIR \
-    mkdir $JULIA_PKGDIR && \
-    chown $NB_USER $JULIA_PKGDIR && \
-    fix-permissions $JULIA_PKGDIR
-
-USER $NB_UID
-
-# R packages including IRKernel which gets installed globally.
-RUN conda install --quiet --yes \
-    'rpy2=2.9*' \
-    'r-base=3.5.1' \
-    'r-irkernel=0.8*' \
-    'r-plyr=1.8*' \
-    'r-devtools=1.13*' \
-    'r-tidyverse=1.2*' \
-    'r-shiny=1.2*' \
-    'r-rmarkdown=1.11*' \
-    'r-forecast=8.2*' \
-    'r-rsqlite=2.1*' \
-    'r-reshape2=1.4*' \
-    'r-nycflights13=1.0*' \
-    'r-caret=6.0*' \
-    'r-rcurl=1.95*' \
-    'r-crayon=1.3*' \
-    'r-randomforest=4.6*' \
-    'r-htmltools=0.3*' \
-    'r-sparklyr=0.9*' \
-    'r-htmlwidgets=1.2*' \
-    'r-hexbin=1.27*' && \
-    conda clean -tipsy && \
-    fix-permissions $CONDA_DIR && \
-    fix-permissions /home/$NB_USER
-
-# Add Julia packages. Only add HDF5 if this is not a test-only build since
-# it takes roughly half the entire build time of all of the images on Travis
-# to add this one package and often causes Travis to timeout.
-#
-# Install IJulia as jovyan and then move the kernelspec out
-# to the system share location. Avoids problems with runtime UID change not
-# taking effect properly on the .local folder in the jovyan home dir.
-RUN julia -e 'import Pkg; Pkg.update()' && \
-    (test $TEST_ONLY_BUILD || julia -e 'import Pkg; Pkg.add("HDF5")') && \
-    julia -e 'import Pkg; Pkg.add("Gadfly")' && \
-    julia -e 'import Pkg; Pkg.add("RDatasets")' && \
-    julia -e 'import Pkg; Pkg.add("IJulia")' && \
-    # Precompile Julia packages \
-    julia -e 'using IJulia' && \
-    # move kernelspec out of home \
-    mv $HOME/.local/share/jupyter/kernels/julia* $CONDA_DIR/share/jupyter/kernels/ && \
-    chmod -R go+rx $CONDA_DIR/share/jupyter && \
-    rm -rf $HOME/.local && \
-    fix-permissions $JULIA_PKGDIR $CONDA_DIR/share/jupyter
+LABEL maintainer="Ben <ben.is.located@gmail.com>"
 
 # based on
 # https://github.com/jupyter/docker-stacks/blob/master/scipy-notebook/Dockerfile
 
 USER root
-RUN conda config --append channels auto
-RUN conda config --append channels conda-forge
-RUN conda config --append channels jlmenut
-RUN conda config --append channels qinves
-RUN conda config --append channels trung
-RUN conda install --quiet --yes \
-    'dicttoxml' \
+
+#RUN conda update conda
+RUN conda config --add channels auto && \
+    conda config --add channels conda-forge
+#    conda config --add channels jlmenut && \ # weasyprint
+#    conda config --add channels qinves && \ # pycallgraph
+#    conda config --add channels trung && \
+
+RUN conda install --quiet --yes 'dicttoxml' \
+ 'pandas' \
 #https://github.com/quandyfactory/dicttoxml
-    'jupyter_contrib_nbextensions' \
-# https://jupyter-contrib-nbextensions.readthedocs.io/en/latest/install.html
+ 'xmltodict' \
+#https://anaconda.org/conda-forge/xmltodict
 #    'dict2xml' \
-    'google-api-python-client' \
+# 'google-api-python-client' \
 #https://anaconda.org/conda-forge/google-api-python-client
-    'httplib2' \
-#https://github.com/httplib2/httplib2
-    'lxml' \
-#https://github.com/lxml/lxml
-    'missingno' \
-#https://github.com/ResidentMario/missingno
-    'oauth2client' \
+# 'oauth2client' \
 #https://anaconda.org/conda-forge/oauth2client
-    'python-pdfkit' \
+ 'httplib2' \
+#https://github.com/httplib2/httplib2
+# 'lxml' \
+#https://github.com/lxml/lxml
+ 'missingno' \
+#https://github.com/ResidentMario/missingno
+# 'python-pdfkit' \
 #https://anaconda.org/conda-forge/python-pdfkit
-#    'pycallgraph' \
-#https://anaconda.org/qinves/pycallgraph
-    'pydot' \
+# 'pydot' \
 #https://anaconda.org/anaconda/pydot
-    'selenium' \
+# 'selenium' \
 #https://anaconda.org/conda-forge/selenium
 #    'json2xml' \
 #https://anaconda.org/auto/json2xml
-    'tzlocal' \
+# 'tzlocal' \
 #https://anaconda.org/conda-forge/tzlocal
-#    'weasyprint' \
-#https://anaconda.org/jlmenut/weasyprint
-    'wkhtmltopdf' \
+# 'wkhtmltopdf' \
 #https://anaconda.org/bioconda/wkhtmltopdf
-    'xhtml2pdf' \
+# 'xhtml2pdf' \
 #https://anaconda.org/SasView/xhtml2pdf
-    'xlsxwriter' \
+# 'xlsxwriter' \
 #https://anaconda.org/anaconda/xlsxwriter
-    'xmltodict' \
-#https://anaconda.org/conda-forge/xmltodict
-    'pypdf2' \
+# 'pypdf2' \
 #http://mstamy2.github.io/PyPDF2/
-    'faker' \
+ 'faker' \
 #https://faker.readthedocs.io/en/master/
-    'graphviz' \
-    'python-graphviz' \
-    'line_profiler' \
+ 'graphviz' \
+ 'python-graphviz' \
+ 'line_profiler' \
 #https://anaconda.org/anaconda/line_profiler
-    'py2neo' \
-    'openpyxl' && \
+# 'py2neo' \
+ 'python-docx' && \
+# 'tika' && \
+# https://anaconda.org/conda-forge/tika
+# 'openpyxl' && \
     npm cache clean --force && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
     rm -rf /home/$NB_USER/.cache/yarn && \
     rm -rf /home/$NB_USER/.node-gyp && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
+
+
+# JupyterLab extensions requires nodejs; see https://jupyterlab.readthedocs.io/en/stable/user/extensions.html
+RUN conda install -c conda-forge nodejs
+
+# https://github.com/jupyterlab/jupyterlab-toc
+RUN jupyter labextension install @jupyterlab/toc
+# https://github.com/vidartf/jupyterlab_discovery
+#    jupyter serverextension enable jupyterlab_discovery
+
+#    'weasyprint' \
+#https://anaconda.org/jlmenut/weasyprint
+
+
+#    'pycallgraph' \
+#UnsatisfiableError: The following specifications were found to be in conflict: jupyterlab=0.34.12 and  pycallgraph
+#https://anaconda.org/qinves/pycallgraph
+
 
 
 USER $NB_UID
