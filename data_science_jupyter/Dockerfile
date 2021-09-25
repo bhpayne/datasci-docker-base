@@ -29,6 +29,7 @@ RUN conda config --add channels auto && \
 #    conda config --add channels trung && \
 
 RUN conda install --quiet --yes \
+# https://anaconda.org/conda-forge/bash_kernel
   'bash_kernel' \
   'dicttoxml' \
  'pandas' \
