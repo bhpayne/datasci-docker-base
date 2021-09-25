@@ -28,7 +28,9 @@ RUN conda config --add channels auto && \
 #    conda config --add channels qinves && \ # pycallgraph
 #    conda config --add channels trung && \
 
-RUN conda install --quiet --yes 'dicttoxml' \
+RUN conda install --quiet --yes \
+  'bash_kernel' \
+  'dicttoxml' \
  'pandas' \
 #https://github.com/quandyfactory/dicttoxml
  'xmltodict' \
@@ -66,6 +68,8 @@ RUN conda install --quiet --yes 'dicttoxml' \
 #https://faker.readthedocs.io/en/master/
  'graphviz' \
  'python-graphviz' \
+ 'pygraphviz' \
+ 'pydot' \
  'line_profiler' \
 #https://anaconda.org/anaconda/line_profiler
 # 'py2neo' \
