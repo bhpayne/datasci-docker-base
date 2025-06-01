@@ -1,11 +1,6 @@
 
-# docker build -t datasci .
-
 # https://jupyter-docker-stacks.readthedocs.io/en/latest/using/recipes.html#run-jupyterlab
 # docker run -it -e JUPYTER_ENABLE_LAB=yes -p 8888:8888 --net=dockernet  -v "$PWD":/home/jovyan datasci start.sh jupyter lab --LabApp.token=''
-
-# Copyright (c) Jupyter Development Team.
-# Distributed under the terms of the Modified BSD License.
 
 # https://github.com/jupyter/docker-stacks/tree/master/datascience-notebook
 # https://jupyter-docker-stacks.readthedocs.io/en/latest/using/selecting.html#core-stacks
@@ -41,6 +36,8 @@ RUN conda install --quiet --yes \
 #https://anaconda.org/conda-forge/google-api-python-client
 # 'oauth2client' \
 #https://anaconda.org/conda-forge/oauth2client
+  'wfdb' \
+# conda install conda-forge::wfdb
  'httplib2' \
 #https://github.com/httplib2/httplib2
 # 'lxml' \
@@ -90,7 +87,7 @@ RUN conda install --quiet --yes \
 RUN conda install -c conda-forge nodejs
 
 # https://github.com/jupyterlab/jupyterlab-toc
-RUN jupyter labextension install @jupyterlab/toc
+# RUN jupyter labextension install @jupyterlab/toc
 # https://github.com/vidartf/jupyterlab_discovery
 #    jupyter serverextension enable jupyterlab_discovery
 
